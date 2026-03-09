@@ -3,20 +3,19 @@ import ssl
 import numpy as np
 import torch
 
-from parameters import get_params
+from parameters import get_params, DataConfig, ModelConfig, TrainingConfig
 from models.MLP import MLP
 from models.CNN import MNIST_CNN, SimpleCNN
 from models.VGG import VGG
 from models.ResNet import ResNet, BasicBlock
 from train import run_training
-from test  import run_test
+from test import run_test
 
-
-# Fix for macOS SSL certificate verification error when downloading MNIST
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
-def set_seed(seed):
+def set_seed(seed: int) -> None:
+    """Set random seeds for reproducibility across all libraries."""
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -25,61 +24,63 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
 
 
-def build_model(params):
-    model_name = params["model"]
-    dataset    = params["dataset"]
-    nc         = params["num_classes"]
+def build_model(data_cfg: DataConfig, model_cfg: ModelConfig) -> torch.nn.Module:
+    """Instantiate and return the model specified in model_cfg."""
+    model_name = model_cfg.model
+    dataset    = data_cfg.dataset
+    nc         = data_cfg.num_classes
 
     if model_name == "mlp":
         return MLP(
-            input_size   = params["input_size"],
-            hidden_sizes = params["hidden_sizes"],
+            input_size   = data_cfg.input_size,
+            hidden_sizes = model_cfg.hidden_sizes,
             num_classes  = nc,
-            dropout      = params["dropout"],
+            dropout      = model_cfg.dropout,
+            activation   = model_cfg.activation,
+            batch_norm   = model_cfg.batch_norm,
         )
 
     if model_name == "cnn":
-        # MNIST_CNN expects 1-channel 28×28; SimpleCNN expects 3-channel 32×32
         if dataset == "mnist":
             return MNIST_CNN(num_classes=nc)
-        else:
-            return SimpleCNN(num_classes=nc)
+        return SimpleCNN(num_classes=nc)
 
     if model_name == "vgg":
         if dataset == "mnist":
             raise ValueError("VGG is designed for 3-channel images; use cifar10 with vgg.")
-        return VGG(dept=params["vgg_depth"], num_class=nc)
+        return VGG(dept=model_cfg.vgg_depth, num_class=nc)
 
     if model_name == "resnet":
         if dataset == "mnist":
             raise ValueError("ResNet is designed for 3-channel images; use cifar10 with resnet.")
-        return ResNet(BasicBlock, params["resnet_layers"], num_classes=nc)
+        return ResNet(BasicBlock, model_cfg.resnet_layers, num_classes=nc)
 
     raise ValueError(f"Unknown model: {model_name}")
 
 
-def main():
-    params = get_params()
+def main() -> None:
+    """Entry point: parse config, build model, run training and/or testing."""
+    data_cfg, model_cfg, train_cfg = get_params()
 
-    set_seed(params["seed"])
-    print(f"Seed set to: {params['seed']}")
-    print(f"Dataset: {params['dataset']}  |  Model: {params['model']}")
+    set_seed(train_cfg.seed)
+    print(f"Seed set to: {train_cfg.seed}")
+    print(f"Dataset: {data_cfg.dataset}  |  Model: {model_cfg.model}")
 
     device = torch.device(
-        params["device"] if torch.cuda.is_available() else
+        train_cfg.device if torch.cuda.is_available() else
         "mps" if torch.backends.mps.is_available() else
         "cpu"
     )
     print(f"Using device: {device}")
 
-    model = build_model(params).to(device)
+    model = build_model(data_cfg, model_cfg).to(device)
     print(model)
 
-    if params["mode"] in ("train", "both"):
-        run_training(model, params, device)
+    if train_cfg.mode in ("train", "both"):
+        run_training(model, data_cfg, model_cfg, train_cfg, device)
 
-    if params["mode"] in ("test", "both"):
-        run_test(model, params, device)
+    if train_cfg.mode in ("test", "both"):
+        run_test(model, data_cfg, train_cfg, device)
 
 
 if __name__ == "__main__":
