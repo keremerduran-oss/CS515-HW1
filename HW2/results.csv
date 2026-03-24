@@ -1,0 +1,10 @@
+run_name,model,dataset,transfer_option,hidden_sizes,activation,dropout,batch_norm,reg_type,reg_lambda,learning_rate,batch_size,scheduler,epochs,label_smoothing,temperature,alpha,best_val_acc,test_acc
+transfer_option1_resnet18,resnet,cifar10,option1,"[512, 256, 128]",relu,0.3,True,none,0.0001,0.001,128,cosine,10,0.0,4.0,0.7,0.8119,0.8119
+transfer_option2_resnet18,resnet,cifar10,option2,"[512, 256, 128]",relu,0.3,True,none,0.0001,0.001,128,cosine,10,0.0,4.0,0.7,0.8557,0.8557
+cnn_actrelu_do0.3_bnTrue_regnone_schcosine_ls0.0,cnn,cifar10,none,"[512, 256, 128]",relu,0.3,True,none,0.0001,0.001,128,cosine,30,0.0,4.0,0.7,0.7652,0.7652
+resnet_scratch,resnet,cifar10,none,"[512, 256, 128]",relu,0.3,True,none,0.0001,0.001,128,cosine,50,0.0,4.0,0.7,0.9353,0.9353
+resnet_scratch_ls,resnet,cifar10,none,"[512, 256, 128]",relu,0.3,True,none,0.0001,0.001,128,cosine,50,0.1,4.0,0.7,0.9362,0.9362
+cnn_distilled,cnn,cifar10,none,"[512, 256, 128]",relu,0.3,True,none,0.0001,0.001,128,cosine,30,0.0,4.0,0.7,0.7536,0.7536
+cnn_distilled_v2,cnn,cifar10,none,"[512, 256, 128]",relu,0.3,True,none,0.0001,0.001,128,cosine,50,0.0,2.0,0.5,0.7982,0.7982
+cnn_baseline_50,cnn,cifar10,none,"[512, 256, 128]",relu,0.3,True,none,0.0001,0.001,128,cosine,50,0.0,4.0,0.7,0.7921,0.7921
+mobilenet_softtargets,mobilenet,cifar10,none,"[512, 256, 128]",relu,0.3,True,none,0.0001,0.001,128,cosine,50,0.0,4.0,0.7,0.9103,0.9103
